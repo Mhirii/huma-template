@@ -9,13 +9,15 @@ import (
 
 type ServiceContext struct {
 	context.Context
-	Log zerolog.Logger
+	Log    zerolog.Logger
+	UserID *string
 }
 
 func NewServiceContext(ctx context.Context, log zerolog.Logger) ServiceContext {
 	return ServiceContext{
 		Context: ctx,
 		Log:     log,
+		UserID:  nil,
 	}
 }
 
@@ -28,17 +30,28 @@ func (c ServiceContext) SetLogger(log zerolog.Logger) ServiceContext {
 	return c
 }
 
+func (c ServiceContext) GetUserID() *string {
+	return c.UserID
+}
+
 func FromContext(ctx context.Context) ServiceContext {
 	c := ctx
 	log := c.Value("logger").(zerolog.Logger)
+	userID := ""
 	if &log == nil {
 		l := logging.L()
 		log = l
 		c = context.WithValue(ctx, "logger", log)
 	}
+	_userID := c.Value("userID").(string)
+	if &_userID != nil {
+		c = context.WithValue(ctx, "userID", _userID)
+		userID = _userID
+	}
 	return ServiceContext{
 		Context: c,
 		Log:     log,
+		UserID:  &userID,
 	}
 }
 
