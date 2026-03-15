@@ -1,0 +1,6 @@
+.data_*
+.data
+*target
+app.log
+tmp
+*.log
