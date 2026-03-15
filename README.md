@@ -9,6 +9,7 @@ A Go service template to get you from zero to a running REST API in minutes. Clo
 - **JWT authentication** — signup, login, token refresh, logout, and token verification, all wired up end-to-end
 - **[Bun ORM](https://bun.uptrace.dev/)** with PostgreSQL — models, migrations, and transaction support
 - **Structured logging** via [Zerolog](https://github.com/rs/zerolog) — request-scoped, written to stdout and a log file simultaneously
+- **Prometheus metrics** — request duration, request count, and process uptime exposed at `/metrics` out of the box
 - **Layered config** — YAML file, environment variables, and CLI flags, all merged with [Viper](https://github.com/spf13/viper) + [pflag](https://github.com/spf13/pflag), with struct-tag-driven validation
 - **OpenTelemetry** instrumentation plumbed in at the HTTP layer
 - **[Just](https://github.com/casey/just)** task runner for common dev workflows
@@ -45,13 +46,24 @@ Starts PostgreSQL 17 on `:5432` and Redis 8 on `:6379`.
 
 ### 3. Configure
 
-Copy the example config and fill in your values:
+An `api-config.yaml` is included with sensible local defaults. Edit it to match your environment:
 
-```sh
-cp api-config.example.yaml api-config.yaml
+```yaml
+Server:
+  Port: 8000
+Auth:
+  Secret: change-me-to-a-long-random-string
+  AccessTokenTTL: 3600     # 1 hour
+  RefreshTokenTTL: 86400   # 1 day
+DB:
+  Host: localhost
+  Port: 5432
+  Username: postgres
+  Password: postgres
+  Name: postgres
 ```
 
-Or use environment variables directly (see [Configuration](#configuration)).
+All values can also be set via environment variables (see [Configuration](#configuration)).
 
 ### 4. Run migrations
 
@@ -65,10 +77,11 @@ just migup
 just api
 ```
 
-The server starts on port `8888` by default. The auto-generated OpenAPI docs are available at:
+The server starts on port `8000` by default. The auto-generated OpenAPI docs are available at:
 
-- **Swagger UI** → `http://localhost:8888/docs`
-- **OpenAPI JSON** → `http://localhost:8888/openapi.json`
+- **Swagger UI** → `http://localhost:8000/docs`
+- **OpenAPI JSON** → `http://localhost:8000/openapi.json`
+- **Prometheus metrics** → `http://localhost:8000/metrics`
 
 ---
 
@@ -77,22 +90,27 @@ The server starts on port `8888` by default. The auto-generated OpenAPI docs are
 ```
 .
 ├── cmd/
-│   ├── api/main.go        # Server entrypoint — wires everything together
-│   └── migrate.go         # Migration CLI (up / down / status)
+│   ├── api/main.go              # Server entrypoint — wires everything together
+│   └── migrate.go               # Migration CLI (up / down / status)
 ├── internal/
-│   ├── config/            # APIConfig loader and type definitions
-│   ├── dto/               # Request / response types and shared list/filter helpers
-│   ├── handlers/          # HTTP handlers — thin layer, delegates to services
-│   ├── middleware/         # Auth (JWT) and general (logging, request ID) middleware
-│   ├── models/            # Bun ORM models
-│   └── svc/               # Business logic — auth, tokens, users
-├── migrations/            # SQL migration files + Bun registry
+│   ├── config/                  # APIConfig loader and type definitions
+│   ├── dto/                     # Request / response types and shared list/filter helpers
+│   ├── handlers/                # HTTP handlers — thin layer, delegates to services
+│   ├── middleware/
+│   │   ├── auth.mw.go           # JWT validation middleware
+│   │   ├── common.mw.go         # Request logging, request ID, start time
+│   │   └── metrics.mw.go        # Prometheus request instrumentation
+│   ├── models/                  # Bun ORM models
+│   └── svc/                     # Business logic — auth, tokens, users
+├── migrations/                  # SQL migration files + Bun registry
 ├── pkg/
-│   ├── config/            # Reflection-based config binding and validation
-│   ├── ctx/               # ServiceContext (context + logger + userID)
-│   ├── db/                # PostgreSQL connection helpers
-│   ├── logging/           # Zerolog initialisation and helpers
-│   └── tokens/            # JWT generation and parsing (HS256)
+│   ├── config/                  # Reflection-based config binding and validation
+│   ├── ctx/                     # ServiceContext (context + logger + userID)
+│   ├── db/                      # PostgreSQL connection helpers
+│   ├── logging/                 # Zerolog initialisation and helpers
+│   ├── metrics/                 # Prometheus registry and metric definitions
+│   └── tokens/                  # JWT generation and parsing (HS256)
+├── api-config.yaml              # Local development config
 ├── docker-compose.yml
 └── justfile
 ```
@@ -105,38 +123,19 @@ Config is loaded from `api-config.yaml` (or any file pointed to by `CONFIG_PATH`
 
 | YAML key | Env var | Default | Description |
 |---|---|---|---|
-| `server.port` | `SERVICE_PORT` | `8888` | HTTP listen port |
-| `logger.log_level` | `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
-| `logger.log_format` | `LOG_FORMAT` | `text` | `text` or `json` |
-| `logger.log_file` | `LOG_FILE` | `app.log` | Log file path |
-| `auth.auth_secret` | `AUTH_SECRET` | — | **Required.** JWT signing secret |
-| `auth.auth_access_token_ttl` | `AUTH_ACCESS_TOKEN_TTL` | — | Access token lifetime (seconds) |
-| `auth.auth_refresh_token_ttl` | `AUTH_REFRESH_TOKEN_TTL` | — | Refresh token lifetime (seconds) |
-| `db.db_host` | `DB_HOST` | — | **Required.** Postgres host |
-| `db.db_port` | `DB_PORT` | `5432` | Postgres port |
-| `db.db_username` | `DB_USERNAME` | — | **Required.** Postgres user |
-| `db.db_password` | `DB_PASSWORD` | — | **Required.** Postgres password |
-| `db.db_name` | `DB_NAME` | — | **Required.** Postgres database name |
-| `db.db_ssl` | `DB_SSL` | `false` | Enable SSL mode |
-
-Minimal `api-config.yaml`:
-
-```yaml
-server:
-  port: 8888
-
-auth:
-  auth_secret: "change-me-to-a-long-random-string"
-  auth_access_token_ttl: 900       # 15 minutes
-  auth_refresh_token_ttl: 604800   # 7 days
-
-db:
-  db_host: localhost
-  db_port: 5432
-  db_username: postgres
-  db_password: postgres
-  db_name: postgres
-```
+| `Server.Port` | `SERVICE_PORT` | `8888` | HTTP listen port |
+| `Logger.LogLevel` | `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
+| `Logger.LogFormat` | `LOG_FORMAT` | `text` | `text` or `json` |
+| `Logger.LogFile` | `LOG_FILE` | `app.log` | Log file path |
+| `Auth.Secret` | `AUTH_SECRET` | — | **Required.** JWT signing secret |
+| `Auth.AccessTokenTTL` | `AUTH_ACCESS_TOKEN_TTL` | — | Access token lifetime (seconds) |
+| `Auth.RefreshTokenTTL` | `AUTH_REFRESH_TOKEN_TTL` | — | Refresh token lifetime (seconds) |
+| `DB.Host` | `DB_HOST` | — | **Required.** Postgres host |
+| `DB.Port` | `DB_PORT` | `5432` | Postgres port |
+| `DB.Username` | `DB_USERNAME` | — | **Required.** Postgres user |
+| `DB.Password` | `DB_PASSWORD` | — | **Required.** Postgres password |
+| `DB.Name` | `DB_NAME` | — | **Required.** Postgres database name |
+| `DB.SSL` | `DB_SSL` | `false` | Enable SSL mode |
 
 ---
 
@@ -154,9 +153,34 @@ All endpoints live under `/auth`. Routes tagged `"public"` bypass the JWT middle
 
 ### Token strategy
 
-- Short-lived **access token** (`token_type: "access"`) — sent as `Authorization: Bearer <token>` on every request
-- Longer-lived **refresh token** (`token_type: "refresh"`) — stored server-side in the `refresh_tokens` table, revocable
+- Short-lived **access token** (`token_type: "access"`) — sent as `Authorization: Bearer <token>` on every protected request
+- Longer-lived **refresh token** (`token_type: "refresh"`) — stored server-side in the `refresh_tokens` table, revocable at any time
 - Both tokens share a `token_id` that ties the access token to a specific refresh token record, enabling targeted revocation
+
+---
+
+## Metrics
+
+A `/metrics` endpoint is exposed on the same port as the API and serves a Prometheus-compatible scrape target.
+
+Tracked metrics:
+
+| Metric | Type | Labels | Description |
+|---|---|---|---|
+| `http_request_duration_seconds` | Histogram | `status`, `method`, `operation`, `path` | Time spent serving each request |
+| `http_requests_total` | Counter | `status`, `method`, `operation`, `path` | Total number of requests |
+| `process_uptime_seconds` | Gauge | — | Seconds since the process started |
+
+The Go runtime collector (`go_*`) and process collector (`process_*`) are also registered automatically.
+
+To scrape with Prometheus, add this to your `prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: my-service
+    static_configs:
+      - targets: ["localhost:8000"]
+```
 
 ---
 
@@ -170,7 +194,7 @@ just migdown     # roll back one migration
 just migstatus   # show applied / pending status
 ```
 
-To add a new migration, create a pair of files:
+To add a new migration, create a numbered pair of files:
 
 ```
 migrations/03_things_table.up.sql
@@ -233,6 +257,7 @@ q = dto.ApplyFilters(filters, q)
 | ORM | [uptrace/bun](https://github.com/uptrace/bun) |
 | JWT | [cristalhq/jwt v5](https://github.com/cristalhq/jwt) |
 | Logging | [rs/zerolog](https://github.com/rs/zerolog) |
+| Metrics | [prometheus/client_golang](https://github.com/prometheus/client_golang) |
 | Config | [spf13/viper](https://github.com/spf13/viper) + [spf13/pflag](https://github.com/spf13/pflag) |
 | IDs | [oklog/ulid v2](https://github.com/oklog/ulid) |
 | Passwords | [golang.org/x/crypto bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) |
