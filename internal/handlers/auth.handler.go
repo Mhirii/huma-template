@@ -21,7 +21,7 @@ func RegisterAuthRoutes(api huma.API, svc *svc.AuthService) {
 	h := &AuthHandler{svc: svc}
 	g := huma.NewGroup(api, "/auth")
 	g.UseSimpleModifier(func(op *huma.Operation) {
-		op.Tags = []string{"Auth"}
+		op.Tags = []string{"Auth", "public"}
 	})
 
 	huma.Register(g, huma.Operation{

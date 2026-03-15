@@ -43,10 +43,12 @@ func FromContext(ctx context.Context) ServiceContext {
 		log = l
 		c = context.WithValue(ctx, "logger", log)
 	}
-	_userID := c.Value("userID").(string)
-	if &_userID != nil {
-		c = context.WithValue(ctx, "userID", _userID)
-		userID = _userID
+	_userID := c.Value("userID")
+	if _userID == nil {
+		userID = ""
+	} else {
+		userID = _userID.(string)
+		c = context.WithValue(ctx, "userID", userID)
 	}
 	return ServiceContext{
 		Context: c,

@@ -19,7 +19,6 @@ type UsersService struct {
 }
 
 func NewUsersService(db *bun.DB) (*UsersService, error) {
-	// log := logging.L().With().Str("service", "users.svc").Logger()
 	return &UsersService{db: db}, nil
 }
 

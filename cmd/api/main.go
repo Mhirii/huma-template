@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,7 +17,10 @@ import (
 	"github.com/mhirii/huma-template/internal/svc"
 	"github.com/mhirii/huma-template/pkg/db"
 	"github.com/mhirii/huma-template/pkg/logging"
+	"github.com/mhirii/huma-template/pkg/metrics"
 	"github.com/mhirii/huma-template/pkg/tokens"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -101,29 +103,32 @@ func main() {
 			os.Exit(1)
 		}
 
+		api.UseMiddleware(middleware.MetricsMiddleware)
+		api.UseMiddleware(middleware.GeneralMiddleware)
+
 		handlers.RegisterAuthRoutes(api, authsvc)
+		api.UseMiddleware(middleware.AuthMiddleware)
+
 		handlers.RegisterUserRoutes(api, userSvc)
 
-		api.UseMiddleware(middleware.AuthMiddleware)
-		api.UseMiddleware(middleware.GeneralMiddleware)
+		reg := metrics.InitMetrics()
+		reg.MustRegister(
+			collectors.NewGoCollector(),
+			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+		)
 
 		l.Info().Msg("Starting backend")
 		l.Info().Interface("cfg", cfg).Msg("config")
 
-		type HelloReq struct{}
-		type HelloResBody struct {
-			Msg string `json:"msg"`
-		}
-		type HelloRes struct{ Body HelloResBody }
-		huma.Register(api, huma.Operation{Tags: []string{"public"}, Method: http.MethodGet, Path: "/", OperationID: "helloworld"},
-			func(c context.Context, data *HelloReq) (*HelloRes, error) {
-				return &HelloRes{Body: HelloResBody{Msg: "Hello World"}}, nil
-			})
-
 		hooks.OnStart(func() {
 			l.Info().Int("port", cfg.Server.Port).Msg("API server listening")
+			mux := http.NewServeMux()
 			wrapped := otelhttp.NewHandler(router, "http.server")
-			wrappedWithLogger := middleware.OnStartMiddleware(wrapped)
+			prom := promhttp.HandlerFor(reg, promhttp.HandlerOpts{})
+			mux.Handle("/", wrapped)
+			mux.Handle("/metrics", prom)
+			wrappedWithMetrics := mux
+			wrappedWithLogger := middleware.OnStartMiddleware(wrappedWithMetrics)
 			if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), wrappedWithLogger); err != nil {
 				// if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), wrapped); err != nil {
 				panic(fmt.Sprintf("failed to start server: %v", err))

@@ -1,0 +1,18 @@
+Server:
+  Port: 8000
+Logger:
+  LogLevel: debug
+  LogFormat: text
+  LogFile: logs/api.log
+DB:
+  Host: localhost
+  Port: 5432
+  Username: postgres
+  Password: postgres
+  Name: postgres
+  SSL: false
+Auth:
+  Secret: secret
+  AccessTokenTTL: 3600
+  RefreshTokenTTL: 86400
+  RateLimit: 1000
