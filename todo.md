@@ -4,12 +4,6 @@ This file tracks remediation work discovered during codebase audit.
 
 ## Priority 0 - Crash and Data Safety (do first)
 
-- [ ] Fix login nil-pointer crash and align API contract.
-  - [ ] Update login request DTO to truly support username OR email.
-  - [ ] Add explicit validation: reject requests where both are empty.
-  - [ ] Remove unsafe dereference in `internal/handlers/auth.handler.go`.
-  - [ ] Update auth service query logic to consume either identifier cleanly.
-
 - [ ] Fix migration rollback bug for refresh token table.
   - [ ] In `migrations/02_rtokens_table.down.sql`, change dropped table from `refreshtokens` to `refresh_tokens`.
   - [ ] Verify up/down roundtrip locally with migrate commands.

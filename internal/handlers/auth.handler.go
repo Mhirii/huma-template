@@ -72,7 +72,19 @@ func RegisterAuthRoutes(api huma.API, svc *svc.AuthService) {
 
 func (h *AuthHandler) Login(c context.Context, input *dto.LoginReq) (*dto.LoginRes, error) {
 	ctx := ctx.FromContext(c)
-	u, t, err := h.svc.Login(ctx, *input.Body.Username, input.Body.Password)
+
+	if input.Body.Username == nil && input.Body.Email == nil {
+		return nil, huma.NewError(http.StatusBadRequest, "username or email is required")
+	}
+
+	identifier := ""
+	if input.Body.Username != nil {
+		identifier = *input.Body.Username
+	} else {
+		identifier = *input.Body.Email
+	}
+
+	u, t, err := h.svc.Login(ctx, identifier, input.Body.Password)
 	if err != nil {
 		return nil, err
 	}

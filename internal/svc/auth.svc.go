@@ -61,20 +61,19 @@ func (s *AuthService) Signup(ctx ctx.ServiceContext, data dto.SignupReq) (*dto.U
 	return u, t, nil
 }
 
-func (s *AuthService) Login(ctx ctx.ServiceContext, username, password string) (*dto.UserModelRes, *tokens.TokensPair, error) {
+func (s *AuthService) Login(ctx ctx.ServiceContext, identifier, password string) (*dto.UserModelRes, *tokens.TokensPair, error) {
 	log := logging.FromCtx(ctx)
 
 	u := models.Users{}
 
 	err := s.db.NewSelect().Model(&u).WhereGroup(" OR ", func(q *bun.SelectQuery) *bun.SelectQuery {
-		return q.WhereOr("username = ?", username).
-			WhereOr("email = ?", username)
+		return q.WhereOr("username = ?", identifier).
+			WhereOr("email = ?", identifier)
 	}).Scan(ctx, &u)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get user")
 		return nil, nil, huma.Error500InternalServerError("failed to get user")
 	}
-	log.Info().Any("res", u).Msg("res")
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		return nil, nil, huma.Error401Unauthorized("invalid credentials")
@@ -82,7 +81,7 @@ func (s *AuthService) Login(ctx ctx.ServiceContext, username, password string) (
 
 	t, err := s.tsvc.TokensPair(ctx, u.UserID, u.Username, u.Email, nil)
 	if err != nil {
-		s.log.Err(err).Msg("could not create tokens")
+		log.Err(err).Msg("could not create tokens")
 		return nil, nil, huma.Error500InternalServerError(err.Error())
 	}
 	return UsersModelToRes(&u), t, nil

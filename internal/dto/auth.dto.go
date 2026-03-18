@@ -17,7 +17,8 @@ type Tokens struct {
 
 type LoginReq struct {
 	Body struct {
-		Username *string `json:"username" doc:"Username of the user, either this or email is required" minLength:"3" MaxLength:"255"`
+		Username *string `json:"username,omitempty" doc:"Username of the user, either this or email is required" minLength:"3" MaxLength:"255"`
+		Email    *string `json:"email,omitempty" doc:"Email of the user, either this or username is required" Email:"true" format:"email"`
 		Password string  `json:"password" doc:"Password of the user" minLength:"8" MaxLength:"255" required:"true"`
 	}
 }
