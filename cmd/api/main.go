@@ -78,7 +78,8 @@ func main() {
 		})
 		router.Use(h)
 
-		api := humachi.New(router, huma.DefaultConfig("Avelon API", "1.0.0"))
+		api := humachi.New(router, huma.DefaultConfig("Huma Template API", "1.0.0"))
+
 		tokenProvider, err := tokens.NewTokenProvider(tokens.TokenProviderArgs{
 			Secret:          cfg.Auth.Secret,
 			AccessTokenTTL:  cfg.Auth.AccessTokenTTL,

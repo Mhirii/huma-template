@@ -36,19 +36,20 @@ func (c ServiceContext) GetUserID() *string {
 
 func FromContext(ctx context.Context) ServiceContext {
 	c := ctx
-	log := c.Value("logger").(zerolog.Logger)
-	userID := ""
-	if &log == nil {
+	logVal := c.Value("logger")
+	log, ok := logVal.(zerolog.Logger)
+	if !ok {
 		l := logging.L()
 		log = l
 		c = context.WithValue(ctx, "logger", log)
 	}
+	userID := ""
 	_userID := c.Value("userID")
-	if _userID == nil {
-		userID = ""
-	} else {
-		userID = _userID.(string)
-		c = context.WithValue(ctx, "userID", userID)
+	if _userID != nil {
+		if uid, ok := _userID.(string); ok {
+			userID = uid
+			c = context.WithValue(ctx, "userID", userID)
+		}
 	}
 	return ServiceContext{
 		Context: c,

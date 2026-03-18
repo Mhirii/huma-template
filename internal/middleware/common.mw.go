@@ -28,13 +28,16 @@ func GeneralMiddleware(hc huma.Context, next func(huma.Context)) {
 
 	fromctx := ctx.Value("logger")
 	if fromctx != nil {
-		log = fromctx.(zerolog.Logger)
+		if l, ok := fromctx.(zerolog.Logger); ok {
+			log = l
+		}
 	}
 
 	userIDValue := ctx.Value("userID")
 	if userIDValue != nil {
-		userID := userIDValue.(string)
-		log = log.With().Str("userID", userID).Logger()
+		if userID, ok := userIDValue.(string); ok {
+			log = log.With().Str("userID", userID).Logger()
+		}
 	}
 
 	log.With().Str("operationID", hc.Operation().OperationID)
@@ -45,8 +48,19 @@ func GeneralMiddleware(hc huma.Context, next func(huma.Context)) {
 
 	next(hc)
 
-	logger := hc.Context().Value("logger").(zerolog.Logger)
-	start := hc.Context().Value("requestStart").(time.Time)
+	loggerVal := hc.Context().Value("logger")
+	startVal := hc.Context().Value("requestStart")
+	if loggerVal == nil || startVal == nil {
+		return
+	}
+	logger, ok := loggerVal.(zerolog.Logger)
+	if !ok {
+		return
+	}
+	start, ok := startVal.(time.Time)
+	if !ok {
+		return
+	}
 	logger.Info().
 		Int("status", hc.Status()).
 		Str("method", hc.Method()).
@@ -61,8 +75,6 @@ func OnStartMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		l := logging.L()
 
-		// excluded := []string{"/openapi.yaml", "/docs"}
-
 		start := time.Now()
 		ctx = context.WithValue(ctx, "requestStart", start)
 
@@ -72,8 +84,11 @@ func OnStartMiddleware(next http.Handler) http.Handler {
 		if requestID == "" {
 			fromctx := ctx.Value("requestID")
 			if fromctx != nil {
-				requestID = fromctx.(string)
-			} else {
+				if rid, ok := fromctx.(string); ok {
+					requestID = rid
+				}
+			}
+			if requestID == "" {
 				requestID = ulid.Make().String()
 			}
 		}

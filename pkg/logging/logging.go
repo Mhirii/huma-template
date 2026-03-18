@@ -61,11 +61,11 @@ func L() zerolog.Logger {
 }
 
 func FromCtx(ctx context.Context) zerolog.Logger {
-	logger := ctx.Value("logger")
-	if logger != nil {
-		return logger.(zerolog.Logger)
+	logger, ok := ctx.Value("logger").(zerolog.Logger)
+	if !ok {
+		return L()
 	}
-	return L()
+	return logger
 }
 
 type ReqIDHook struct{}
@@ -75,12 +75,12 @@ func (h ReqIDHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
 	if ok {
 		e.Int("user_id", userID)
 	}
-	requestID := e.GetCtx().Value("requestID").(string)
-	if requestID != "" {
+	requestID, ok := e.GetCtx().Value("requestID").(string)
+	if ok && requestID != "" {
 		e.Str("request_id", requestID)
 	}
-	operationID := e.GetCtx().Value("operationID").(string)
-	if operationID != "" {
+	operationID, ok := e.GetCtx().Value("operationID").(string)
+	if ok && operationID != "" {
 		e.Str("operation_id", operationID)
 	}
 }

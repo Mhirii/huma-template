@@ -11,7 +11,11 @@ import (
 
 func MetricsMiddleware(hc huma.Context, next func(huma.Context)) {
 	ctx := hc.Context()
-	start := hc.Context().Value("requestStart").(time.Time)
+	startVal := ctx.Value("requestStart")
+	start, ok := startVal.(time.Time)
+	if !ok {
+		start = time.Now()
+	}
 
 	ctx = context.WithValue(ctx, "operationID", hc.Operation().OperationID)
 	ctx = context.WithValue(ctx, "requestStart", start)

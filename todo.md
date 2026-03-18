@@ -4,14 +4,6 @@ This file tracks remediation work discovered during codebase audit.
 
 ## Priority 0 - Crash and Data Safety (do first)
 
-- [ ] Harden all context value reads to avoid runtime panics.
-  - [ ] Replace direct type assertions like `ctx.Value("k").(T)` with safe checks in:
-    - [ ] `pkg/logging/logging.go`
-    - [ ] `pkg/ctx/ctx.go`
-    - [ ] `internal/middleware/common.mw.go`
-    - [ ] `internal/middleware/metrics.mw.go`
-  - [ ] Define safe defaults for missing values (`requestID`, `operationID`, `requestStart`, logger).
-
 - [ ] Fix login nil-pointer crash and align API contract.
   - [ ] Update login request DTO to truly support username OR email.
   - [ ] Add explicit validation: reject requests where both are empty.
