@@ -89,8 +89,11 @@ func (h *UsersHandler) List(c context.Context, input *dto.ListUsersReq) (*dto.Li
 
 func (h *UsersHandler) Delete(c context.Context, input *dto.DeleteUserReq) (*dto.DeleteUserRes, error) {
 	ctx := ctx.FromContext(c)
-	_ = ctx
-	return nil, huma.Error501NotImplemented("Not implemented")
+	err := h.svc.DeleteUser(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.DeleteUserRes{Body: dto.DeleteUserResBody{ID: input.ID}}, nil
 }
 
 func (h *UsersHandler) Update(c context.Context, input *dto.UpdateUserReq) (*dto.UpdateUserRes, error) {
