@@ -2,13 +2,6 @@
 
 This file tracks remediation work discovered during codebase audit.
 
-## Priority 0 - Crash and Data Safety (do first)
-
-- [ ] Fix migration rollback bug for refresh token table.
-  - [ ] In `migrations/02_rtokens_table.down.sql`, change dropped table from `refreshtokens` to `refresh_tokens`.
-  - [ ] Verify up/down roundtrip locally with migrate commands.
-  - [ ] Add migration CI step to catch up/down mismatches in future.
-
 ## Priority 1 - Security and Correctness
 
 - [ ] Remove SQL field interpolation risks in filter/sort logic.
