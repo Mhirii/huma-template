@@ -17,9 +17,9 @@ type Tokens struct {
 
 type LoginReq struct {
 	Body struct {
-		Username *string `json:"username,omitempty" doc:"Username of the user, either this or email is required" minLength:"3" MaxLength:"255"`
+		Username *string `json:"username,omitempty" doc:"Username of the user, either this or email is required" minLength:"3" maxLength:"255"`
 		Email    *string `json:"email,omitempty" doc:"Email of the user, either this or username is required" Email:"true" format:"email"`
-		Password string  `json:"password" doc:"Password of the user" minLength:"8" MaxLength:"255" required:"true"`
+		Password string  `json:"password" doc:"Password of the user" minLength:"8" maxLength:"255" required:"true"`
 	}
 }
 type LoginRes struct{ Body LoginResBody }
@@ -30,9 +30,9 @@ type LoginResBody struct {
 
 type SignupReq struct {
 	Body struct {
-		Username string `json:"username" doc:"username of the user" minLength:"3" MaxLength:"255" required:"true"`
+		Username string `json:"username" doc:"username of the user" minLength:"3" maxLength:"255" required:"true"`
 		Email    string `json:"email" doc:"Email of the user" Email:"true" required:"true" format:"email"`
-		Password string `json:"password" doc:"Password of the user" minLength:"8" MaxLength:"255" required:"true"`
+		Password string `json:"password" doc:"Password of the user" minLength:"8" maxLength:"255" required:"true"`
 	}
 }
 type SignupRes struct{ Body Tokens }
