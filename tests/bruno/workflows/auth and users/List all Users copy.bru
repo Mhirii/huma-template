@@ -1,0 +1,39 @@
+meta {
+  name: List all Users copy
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/users/
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ~page: 
+  ~per_page: 
+  ~sort_by: 
+  ~sort_dir: 
+  ~filters: 
+  ~search: 
+  ~includes: 
+}
+
+headers {
+  Authorization: 
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+tests {
+  test("at least one user", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.users).to.be.an("array");
+    expect(body.users.length).to.be.gte(1);
+  });
+  
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Get a User
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/users/:id
+  body: none
+  auth: bearer
+}
+
+params:path {
+  id: {{user_id}}
+}
+
+headers {
+  Authorization: 
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+tests {
+  test("exact user", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.id).to.equal(bru.getVar("user_id"))
+    expect(body.email).to.equal(bru.getVar("email"))
+  });
+  
+}

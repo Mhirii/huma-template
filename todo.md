@@ -11,14 +11,12 @@ This file tracks remediation work discovered during codebase audit.
     - [ ] `internal/middleware/common.mw.go`
     - [ ] `internal/middleware/metrics.mw.go`
   - [ ] Define safe defaults for missing values (`requestID`, `operationID`, `requestStart`, logger).
-  - [ ] Add tests covering missing/malformed context keys.
 
 - [ ] Fix login nil-pointer crash and align API contract.
   - [ ] Update login request DTO to truly support username OR email.
   - [ ] Add explicit validation: reject requests where both are empty.
   - [ ] Remove unsafe dereference in `internal/handlers/auth.handler.go`.
   - [ ] Update auth service query logic to consume either identifier cleanly.
-  - [ ] Add tests for username login, email login, and invalid payloads.
 
 - [ ] Fix migration rollback bug for refresh token table.
   - [ ] In `migrations/02_rtokens_table.down.sql`, change dropped table from `refreshtokens` to `refresh_tokens`.
@@ -31,7 +29,6 @@ This file tracks remediation work discovered during codebase audit.
   - [ ] Create strict allowlists for sortable and filterable fields.
   - [ ] Reject unknown fields/rules with 400 errors.
   - [ ] Ensure `in`/`nin` are parameterized correctly for Bun/Postgres.
-  - [ ] Add tests for valid filters, invalid filters, and attempted SQL injection payloads.
 
 - [ ] Standardize auth token and session handling behavior.
   - [ ] Confirm `refresh_tokens.token` stores expected value (`token id` vs full token string) and rename field/column if needed.
@@ -61,7 +58,6 @@ This file tracks remediation work discovered during codebase audit.
 
 - [ ] Resolve intentionally unfinished endpoint(s).
   - [ ] Implement `UsersHandler.Create` or remove route registration until implemented.
-  - [ ] Add tests for final behavior.
 
 ## Priority 3 - Architecture and Maintainability
 

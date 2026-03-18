@@ -1,0 +1,25 @@
+meta {
+  name: List all Users
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/users/
+  body: none
+  auth: inherit
+}
+
+params:query {
+  ~page: 
+  ~per_page: 
+  ~sort_by: 
+  ~sort_dir: 
+  ~filters: 
+  ~search: 
+  ~includes: 
+}
+
+headers {
+  Authorization: 
+}

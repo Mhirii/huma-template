@@ -1,0 +1,40 @@
+meta {
+  name: List all Users with search
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/users/?search={{email}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  search: {{email}}
+  ~page: 
+  ~per_page: 
+  ~sort_by: 
+  ~sort_dir: 
+  ~filters: 
+  ~includes: 
+}
+
+headers {
+  Authorization: 
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+tests {
+  test("exact user", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.users).to.be.an("array");
+    expect(body.users.length).to.be.eq(1);
+    expect(body.users[0].email).to.equal(bru.getVar("email"))
+  });
+  
+}

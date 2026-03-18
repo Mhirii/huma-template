@@ -1,0 +1,18 @@
+meta {
+  name: Verify
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/verify
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "$schema": "",
+    "token": ""
+  }
+}

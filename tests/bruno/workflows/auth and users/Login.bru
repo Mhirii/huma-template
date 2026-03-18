@@ -1,0 +1,37 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "password": "{{password}}",
+    "username": "{{username}}"
+  }
+}
+
+tests {
+  test("contains tokens", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.tokens).to.exist;
+    expect(body.tokens.access_token).to.not.be.empty;
+    expect(body.tokens.access_token_expires_at).to.exist;
+    expect(body.tokens.refresh_token).to.not.be.empty;
+    expect(body.tokens.refresh_token_expires_at).to.exist;
+    expect(body.user).to.exist;
+    expect(body.user.id).to.exist;
+    expect(body.user.id).to.not.be.empty;
+    bru.setVar("access_token", body.tokens.access_token)
+    bru.setVar("refresh_token", body.tokens.refresh_token)
+    bru.setVar("user_id", body.user.id)
+  });
+  
+}

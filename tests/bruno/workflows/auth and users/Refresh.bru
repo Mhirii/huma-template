@@ -1,0 +1,28 @@
+meta {
+  name: Refresh
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "refresh_token": "{{refresh_token}}"
+  }
+}
+
+tests {
+  test("contains token", function () {
+    expect(res.getStatus()).to.equal(200);
+    const body = res.getBody();
+    expect(body.access_token).to.not.be.empty;
+    expect(body.access_token_expires_at).to.exist;
+    bru.setVar("access_token", body.access_token)
+  });
+  
+}
