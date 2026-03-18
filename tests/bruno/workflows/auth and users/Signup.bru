@@ -21,7 +21,7 @@ body:json {
 script:pre-request {
   bru.setVar("username", bru.interpolate("{{$randomUserName}}"));
   bru.setVar("email", bru.interpolate("{{$randomEmail}}"));
-  bru.setVar("password", bru.interpolate("{{randomPassword}}"));
+  bru.setVar("password", bru.interpolate("{{$randomPassword}}"));
 }
 
 tests {
