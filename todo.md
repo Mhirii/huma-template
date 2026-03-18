@@ -18,27 +18,7 @@ This file tracks remediation work discovered during codebase audit.
   - [ ] Replace `s.log` usage with request-scoped `logging.FromCtx(ctx)`.
   - [ ] Remove unused persistent logger field from service struct if unnecessary.
 
-## Priority 2 - Dead Code and Residue Cleanup
-
-- [ ] Remove or implement unused config and features.
-  - [ ] Either implement auth rate limiting using `Auth.RateLimit` or remove the field from config and docs.
-
-- [ ] Remove unused functions/types or wire them properly.
-  - [ ] `internal/dto/common.dto.go` -> `ResponseType[T]`
-  - [ ] `pkg/db/pg.go` -> `Ping`, `DBHealthCheck`
-  - [ ] `pkg/metrics/metrics.go` -> `GetMetrics`, `GetReg`, `OpsProcessed`
-  - [ ] `pkg/ctx/ctx.go` -> `fromSvcContext`
-  - [ ] `internal/svc/auth.svc.go` -> `Revoke`
-  - [ ] `internal/svc/users.svc.go` -> `GetUserByField` (either expose endpoint or remove)
-
-- [ ] Remove/comment-clean residue.
-  - [ ] Delete stale commented route block in `internal/handlers/users.handler.go`.
-  - [ ] Delete stale commented `ListenAndServe` line in `cmd/api/main.go`.
-
-- [ ] Resolve intentionally unfinished endpoint(s).
-  - [ ] Implement `UsersHandler.Create` or remove route registration until implemented.
-
-## Priority 3 - Architecture and Maintainability
+## Priority 2 - Architecture and Maintainability
 
 - [ ] Break up `cmd/api/main.go` into focused components.
   - [ ] Extract config/bootstrap initialization.
@@ -52,43 +32,11 @@ This file tracks remediation work discovered during codebase audit.
   - [ ] Normalize YAML key style and ensure tags/docs/examples match runtime behavior.
   - [ ] Add unit tests for config precedence (default < file < env < flags).
 
-- [ ] Standardize DTO validation tags.
-  - [ ] Replace inconsistent tags (`MaxLength`, `Email:"true"`) with one canonical style.
-  - [ ] Confirm OpenAPI output and runtime validation are aligned.
+- [x] Standardize DTO validation tags.
+  - [x] Replace inconsistent tags (`maxLength`, `Email:"true"`) with one canonical style.
 
-- [ ] Improve error handling strategy.
-  - [ ] Reduce raw `panic` usage in runtime paths where graceful startup failure is preferred.
-  - [ ] Keep migration CLI behavior explicit and non-ambiguous for invalid commands.
+## Priority 3 - Features
 
-## Priority 4 - Quality Gates and Tests
-
-- [ ] Add automated tests (currently none exist).
-  - [ ] Unit tests: token provider, filter parsing/apply, user service CRUD.
-  - [ ] Middleware tests: auth/public tags, metrics labels, request logging with missing context.
-  - [ ] Integration tests: signup -> login -> refresh -> revoke/logout -> verify flow.
-  - [ ] Migration tests: apply all migrations and rollback one step.
-
-- [ ] Add CI safeguards.
-  - [ ] Run `go test ./...`.
-  - [ ] Run `go vet ./...`.
-  - [ ] Add linter/static checks (e.g., `staticcheck`) for dead code and unsafe assertions.
-
-## Priority 5 - Infra and Documentation Consistency
-
-- [ ] Decide Redis direction.
-  - [ ] If not needed, remove Redis service from `docker-compose.yml` and docs.
-  - [ ] If needed, define ownership and first concrete usage (cache/session/rate-limit).
-
-- [ ] Keep docs in sync with actual behavior.
-  - [ ] Update README config examples and key naming to match loader behavior.
-  - [ ] Document implemented auth login identifier rules (username/email).
-  - [ ] Document filter/sort allowlists and expected request formats.
-
-## Suggested Execution Order
-
-1. P0 crash/data fixes
-2. P1 security/correctness
-3. P2 dead code cleanup
-4. P3 architecture cleanup
-5. P4 tests + CI gates
-6. P5 infra/docs final alignment
+- [ ] Add Logout endpoint (use revoke fn)
+- [ ] Add GetUserByField endpoint
+- [ ] Implement `UsersHandler.Create`
