@@ -6,6 +6,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/mhirii/huma-template/internal/dto"
+	"github.com/mhirii/huma-template/internal/models"
 	"github.com/mhirii/huma-template/internal/svc"
 	"github.com/mhirii/huma-template/pkg/ctx"
 	"github.com/rs/zerolog"
@@ -98,8 +99,21 @@ func (h *UsersHandler) Delete(c context.Context, input *dto.DeleteUserReq) (*dto
 
 func (h *UsersHandler) Update(c context.Context, input *dto.UpdateUserReq) (*dto.UpdateUserRes, error) {
 	ctx := ctx.FromContext(c)
-	_ = ctx
-	return nil, huma.Error501NotImplemented("Not implemented")
+	user := models.Users{UserID: input.Body.Id}
+	if input.Body.Email != nil {
+		user.Email = *input.Body.Email
+	}
+	if input.Body.Username != nil {
+		user.Username = *input.Body.Username
+	}
+	if input.Body.Avatar != nil {
+		user.AvatarURL = *input.Body.Avatar
+	}
+	res, err := h.svc.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.UpdateUserRes{Body: dto.UpdateUserResBody{UserModelRes: *res}}, nil
 }
 
 func (h *UsersHandler) Get(c context.Context, input *dto.GetUserByIDReq) (*dto.GetUserByIDRes, error) {
