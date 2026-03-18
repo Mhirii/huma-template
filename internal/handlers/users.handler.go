@@ -80,8 +80,11 @@ func RegisterUserRoutes(api huma.API, svc *svc.UsersService) {
 
 func (h *UsersHandler) List(c context.Context, input *dto.ListUsersReq) (*dto.ListUsersRes, error) {
 	ctx := ctx.FromContext(c)
-	_ = ctx
-	return nil, huma.Error501NotImplemented("Not implemented")
+	res, err := h.svc.GetUsers(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (h *UsersHandler) Delete(c context.Context, input *dto.DeleteUserReq) (*dto.DeleteUserRes, error) {
