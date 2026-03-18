@@ -8,10 +8,6 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type ResponseType[T any] struct {
-	Body T
-}
-
 type ListQuery struct {
 	Page     int    `query:"page" json:"page" doc:"Page number, starting from 1" default:"1" minimum:"1"`
 	PerPage  int    `query:"per_page" json:"per_page" doc:"Number of items per page" default:"10" minimum:"1" maximum:"200"`

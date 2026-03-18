@@ -67,9 +67,7 @@ func main() {
 		}
 
 		h := cors.Handler(cors.Options{
-			// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-			AllowedOrigins: []string{"https://*", "http://*"},
-			// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+			AllowedOrigins:   []string{"https://*", "http://*"},
 			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 			ExposedHeaders:   []string{"Link"},
@@ -131,7 +129,6 @@ func main() {
 			wrappedWithMetrics := mux
 			wrappedWithLogger := middleware.OnStartMiddleware(wrappedWithMetrics)
 			if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), wrappedWithLogger); err != nil {
-				// if err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), wrapped); err != nil {
 				panic(fmt.Sprintf("failed to start server: %v", err))
 			}
 
