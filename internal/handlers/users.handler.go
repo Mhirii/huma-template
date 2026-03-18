@@ -42,14 +42,14 @@ func RegisterUserRoutes(api huma.API, svc *svc.UsersService) {
 		DefaultStatus: http.StatusOK,
 	}, h.Get)
 
-	huma.Register(g, huma.Operation{
-		OperationID:   "get-user-by-field",
-		Method:        http.MethodGet,
-		Path:          "/{id}",
-		Summary:       "Get a user by field",
-		Description:   "Get a User by any unique field",
-		DefaultStatus: http.StatusOK,
-	}, h.Get)
+	// huma.Register(g, huma.Operation{
+	// 	OperationID:   "get-user-by-field",
+	// 	Method:        http.MethodGet,
+	// 	Path:          "/{field}/{value}",
+	// 	Summary:       "Get a user by field",
+	// 	Description:   "Get a User by any field",
+	// 	DefaultStatus: http.StatusOK,
+	// }, h.Get)
 
 	huma.Register(g, huma.Operation{
 		OperationID:   "update-user",
@@ -118,8 +118,11 @@ func (h *UsersHandler) Update(c context.Context, input *dto.UpdateUserReq) (*dto
 
 func (h *UsersHandler) Get(c context.Context, input *dto.GetUserByIDReq) (*dto.GetUserByIDRes, error) {
 	ctx := ctx.FromContext(c)
-	_ = ctx
-	return nil, huma.Error501NotImplemented("Not implemented")
+	user, err := h.svc.GetUserByID(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.GetUserByIDRes{Body: *user}, nil
 }
 
 func (h *UsersHandler) Create(c context.Context, input *dto.CreateUserReq) (*dto.CreateUserRes, error) {
