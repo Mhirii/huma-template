@@ -48,8 +48,8 @@ func (s *UsersService) GetUsers(ctx ctx.ServiceContext, params *dto.ListUsersReq
 	if params.Search != "" {
 		search := "%" + params.Search + "%"
 		q = q.Where(
-			"(username ILIKE ? OR email ILIKE ? OR first_name ILIKE ? OR family_name ILIKE ?)",
-			search, search, search, search,
+			"(username ILIKE ? OR email ILIKE ?)",
+			search, search,
 		)
 	}
 
